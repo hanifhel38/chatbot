@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kamu Nanyakk??</title>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        poppins: ["Poppins", "sans-serif"],
+                        inter: ["Inter", "sans-serif"]
+                    },
+                    colors: {
+                        primary: "#6D28D9",
+                        secondary: "#A78BFA",
+                        background: "#F9FAFB",
+                        darkBackground: "#1E1E2E"
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+<body class="bg-background dark:bg-darkBackground transition-all duration-300 w-full flex items-center justify-center h-screen">
+    <div class="w-full max-w-2xl bg-white dark:bg-gray-800 shadow-2xl rounded-2xl p-6 flex flex-col h-[600px] overflow-hidden">
+        <!-- Header -->
+        <h1 class="text-4xl font-bold text-primary dark:text-secondary text-center font-poppins mb-4">Kamu Nanyakk??? 💬</h1>
+        
+        <!-- Chat Container -->
+        <div class="flex-1 overflow-y-auto p-4 space-y-3" id="chat-box"></div>
+
+        <!-- Input Chat -->
+        <div class="mt-4 flex items-center space-x-2">
+            <input id="message" type="text" class="flex-1 p-3 border border-gray-300 dark:border-gray-600 rounded-xl text-gray-800 dark:text-white bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-primary outline-none font-inter" placeholder="Ketik pesan...">
+            <button id="send" class="p-3 bg-primary text-white rounded-xl hover:bg-secondary transition-all duration-200">
+                ➤
+            </button>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        document.getElementById("send").addEventListener("click", async () => {
+            const message = document.getElementById("message").value;
+            if (!message.trim()) return;
+
+            addMessage("user", message.replace(/\*/g, ""));
+            document.getElementById("message").value = "";
+
+            const typingIndicator = document.createElement("div");
+            typingIndicator.className = "self-start text-gray-500 text-sm font-inter italic";
+            typingIndicator.innerText = "Sedang Mengetik...";
+            document.getElementById("chat-box").appendChild(typingIndicator);
+            document.getElementById("chat-box").scrollTop = document.getElementById("chat-box").scrollHeight;
+
+            try {
+                const response = await fetch("http://localhost:3000/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ message })
+                });
+                const data = await response.json();
+                typingIndicator.remove();
+                addMessage("bot", data.reply.replace(/\*/g, "") || "Maaf, terjadi kesalahan.");
+            } catch (error) {
+                typingIndicator.remove();
+                addMessage("bot", "❌ Error: Tidak dapat terhubung ke server.");
+            }
+        });
+
+        function addMessage(sender, text) {
+            const chatBox = document.getElementById("chat-box");
+            const msg = document.createElement("div");
+            msg.className = sender === "user" 
+                ? "bg-primary text-white p-3 rounded-lg self-end max-w-xs text-sm font-inter shadow-lg ml-auto"
+                : "bg-gray-300 text-gray-800 p-3 rounded-lg self-start max-w-xs text-sm font-inter shadow-md";
+            msg.innerText = text.replace(/\*/g, "");
+            chatBox.appendChild(msg);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+    </script>
+</body>
+</html>
